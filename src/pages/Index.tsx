@@ -28,12 +28,22 @@ const Index = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center">
-          <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
-            <span className="text-2xl font-bold text-primary-foreground">U</span>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center animate-fade-in">
+          <div className="w-20 h-20 health-gradient rounded-3xl flex items-center justify-center mx-auto mb-6 animate-pulse-glow shadow-xl">
+            <span className="text-3xl font-bold text-white">U</span>
           </div>
-          <p className="text-muted-foreground">Loading...</p>
+          <div className="space-y-2">
+            <h2 className="text-xl font-semibold text-foreground">Loading Uwezo</h2>
+            <p className="text-muted-foreground">Preparing your health dashboard...</p>
+          </div>
+          <div className="mt-6 flex justify-center">
+            <div className="flex space-x-1">
+              <div className="w-2 h-2 bg-primary rounded-full animate-bounce"></div>
+              <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+              <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+            </div>
+          </div>
         </div>
       </div>
     )
@@ -94,23 +104,29 @@ const Index = () => {
   }, [user])
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen">
       {/* Header */}
-      <header className="border-b bg-card">
+      <header className="border-b bg-card/80 backdrop-blur-sm sticky top-0 z-50 shadow-sm">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-sm">U</span>
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 health-gradient rounded-2xl flex items-center justify-center shadow-lg animate-pulse-glow">
+                <span className="text-white font-bold text-lg">U</span>
               </div>
-              <h1 className="text-xl font-bold">Uwezo</h1>
-              <span className="text-sm text-muted-foreground">AI Health Companion</span>
+              <div>
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
+                  Uwezo
+                </h1>
+                <span className="text-xs text-muted-foreground">AI Health Companion</span>
+              </div>
             </div>
             <div className="flex items-center space-x-4">
-              <span className="text-sm text-muted-foreground">
-                Welcome, {user.user_metadata?.first_name || user.email}!
-              </span>
-              <Button variant="outline" onClick={signOut}>
+              <div className="hidden sm:block">
+                <span className="text-sm text-muted-foreground">
+                  Welcome, <span className="font-medium text-foreground">{user.user_metadata?.first_name || user.email}</span>!
+                </span>
+              </div>
+              <Button variant="outline" onClick={signOut} className="hover:bg-primary hover:text-primary-foreground transition-all duration-300">
                 Sign Out
               </Button>
             </div>
@@ -119,17 +135,32 @@ const Index = () => {
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-6">
+      <main className="container mx-auto px-4 py-8">
         <Tabs defaultValue="dashboard" className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-            <TabsTrigger value="journal">Journal</TabsTrigger>
-            <TabsTrigger value="metrics">Add Data</TabsTrigger>
-            <TabsTrigger value="achievements">Achievements</TabsTrigger>
-            <TabsTrigger value="recommendations">AI Coach</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-5 bg-secondary/50 p-1 rounded-2xl mb-8">
+            <TabsTrigger value="dashboard" className="rounded-xl transition-all duration-300 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              Dashboard
+            </TabsTrigger>
+            <TabsTrigger value="journal" className="rounded-xl transition-all duration-300 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              Journal
+            </TabsTrigger>
+            <TabsTrigger value="metrics" className="rounded-xl transition-all duration-300 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              Add Data
+            </TabsTrigger>
+            <TabsTrigger value="achievements" className="rounded-xl transition-all duration-300 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              Achievements
+            </TabsTrigger>
+            <TabsTrigger value="recommendations" className="rounded-xl transition-all duration-300 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              AI Coach
+            </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="dashboard" className="space-y-6">
+          <TabsContent value="dashboard" className="space-y-8 animate-fade-in">
+            <div className="mb-6">
+              <h2 className="text-3xl font-bold text-foreground mb-2">Health Overview</h2>
+              <p className="text-muted-foreground">Monitor your vital health metrics in real-time</p>
+            </div>
+            
             {/* Quick Stats */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <HealthMetricsCard
@@ -138,7 +169,6 @@ const Index = () => {
                 unit="BPM"
                 status="normal"
                 icon="❤️"
-                backgroundColor="bg-red-100"
                 trend="stable"
               />
               <HealthMetricsCard
@@ -147,14 +177,12 @@ const Index = () => {
                 unit="%"
                 status="excellent"
                 icon="🫁"
-                backgroundColor="bg-blue-100"
               />
               <HealthMetricsCard
                 title="Daily Steps"
                 value={dashboardData.steps.toLocaleString()}
                 status="normal"
                 icon="👟"
-                backgroundColor="bg-green-100"
                 trend="up"
               />
               <HealthMetricsCard
@@ -163,27 +191,28 @@ const Index = () => {
                 unit="hours"
                 status="normal"
                 icon="😴"
-                backgroundColor="bg-purple-100"
               />
             </div>
 
             {/* AI Recommendations */}
-            <AIRecommendations />
+            <div className="animate-scale-in">
+              <AIRecommendations />
+            </div>
           </TabsContent>
 
-          <TabsContent value="journal">
+          <TabsContent value="journal" className="animate-fade-in">
             <HealthJournal />
           </TabsContent>
 
-          <TabsContent value="metrics">
+          <TabsContent value="metrics" className="animate-fade-in">
             <AddHealthMetric onMetricAdded={fetchLatestMetrics} />
           </TabsContent>
 
-          <TabsContent value="achievements">
+          <TabsContent value="achievements" className="animate-fade-in">
             <GameificationPanel />
           </TabsContent>
 
-          <TabsContent value="recommendations">
+          <TabsContent value="recommendations" className="animate-fade-in">
             <AIRecommendations />
           </TabsContent>
         </Tabs>

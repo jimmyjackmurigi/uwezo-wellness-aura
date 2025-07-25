@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 
 interface HealthMetricsCardProps {
@@ -8,7 +8,6 @@ interface HealthMetricsCardProps {
   status: 'normal' | 'warning' | 'critical' | 'excellent'
   icon: string
   trend?: 'up' | 'down' | 'stable'
-  backgroundColor?: string
 }
 
 const HealthMetricsCard = ({
@@ -17,21 +16,20 @@ const HealthMetricsCard = ({
   unit,
   status,
   icon,
-  trend,
-  backgroundColor = 'bg-muted'
+  trend
 }: HealthMetricsCardProps) => {
-  const getStatusColor = (status: string) => {
+  const getStatusClass = (status: string) => {
     switch (status) {
       case 'excellent':
-        return 'text-green-600'
+        return 'health-status-excellent'
       case 'normal':
-        return 'text-green-600'
+        return 'health-status-normal'
       case 'warning':
-        return 'text-yellow-600'
+        return 'health-status-warning'
       case 'critical':
-        return 'text-red-600'
+        return 'health-status-critical'
       default:
-        return 'text-muted-foreground'
+        return ''
     }
   }
 
@@ -48,27 +46,40 @@ const HealthMetricsCard = ({
     }
   }
 
+  const getMetricIconClass = (status: string) => {
+    const baseClass = 'metric-icon transition-all duration-300'
+    if (status === 'critical') {
+      return `${baseClass} pulse-animation`
+    }
+    return baseClass
+  }
+
   return (
-    <Card>
+    <Card className="health-card animate-fade-in group">
       <CardContent className="p-6">
         <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm text-muted-foreground">{title}</p>
-            <div className="flex items-baseline space-x-1">
-              <p className="text-2xl font-bold">{value}</p>
-              {unit && <span className="text-sm text-muted-foreground">{unit}</span>}
+          <div className="flex-1">
+            <p className="text-sm font-medium text-muted-foreground mb-2">{title}</p>
+            <div className="flex items-baseline space-x-2 mb-3">
+              <p className="text-3xl font-bold text-foreground tracking-tight">{value}</p>
+              {unit && <span className="text-sm font-medium text-muted-foreground">{unit}</span>}
             </div>
-            <div className="flex items-center space-x-2 mt-1">
-              <Badge variant="secondary" className={getStatusColor(status)}>
+            <div className="flex items-center space-x-3">
+              <Badge 
+                variant="secondary" 
+                className={`${getStatusClass(status)} font-medium px-3 py-1 rounded-full text-xs`}
+              >
                 {status.charAt(0).toUpperCase() + status.slice(1)}
               </Badge>
               {trend && (
-                <span className="text-sm">{getTrendIcon(trend)}</span>
+                <div className="flex items-center space-x-1">
+                  <span className="text-lg transition-transform group-hover:scale-110">{getTrendIcon(trend)}</span>
+                </div>
               )}
             </div>
           </div>
-          <div className={`w-12 h-12 rounded-full flex items-center justify-center ${backgroundColor}`}>
-            <span className="text-2xl">{icon}</span>
+          <div className={getMetricIconClass(status)}>
+            <span className="transition-transform group-hover:scale-110">{icon}</span>
           </div>
         </div>
       </CardContent>
