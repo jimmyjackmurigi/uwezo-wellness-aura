@@ -1,6 +1,98 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useState, useEffect } from 'react'
+import { Navigate } from 'react-router-dom'
+import { useAuth } from '@/hooks/useAuth'
+import { supabase } from '@/integrations/supabase/client'
+import { Button } from '@/components/ui/button'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import HealthMetricsCard from '@/components/HealthMetricsCard'
+import HealthJournal from '@/components/HealthJournal'
+import AddHealthMetric from '@/components/AddHealthMetric'
+import GameificationPanel from '@/components/GameificationPanel'
+import AIRecommendations from '@/components/AIRecommendations'
+
+interface DashboardData {
+  heartRate: number
+  bloodOxygen: number
+  steps: number
+  sleepHours: number
+}
 
 const Index = () => {
+  const { user, signOut, loading } = useAuth()
+  const [dashboardData, setDashboardData] = useState<DashboardData>({
+    heartRate: 72,
+    bloodOxygen: 98,
+    steps: 7842,
+    sleepHours: 7.5
+  })
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+            <span className="text-2xl font-bold text-primary-foreground">U</span>
+          </div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!user) {
+    return <Navigate to="/auth" replace />
+  }
+
+  const fetchLatestMetrics = async () => {
+    try {
+      const { data: metrics } = await supabase
+        .from('health_metrics')
+        .select('metric_type, value')
+        .eq('user_id', user.id)
+        .order('recorded_at', { ascending: false })
+
+      if (metrics) {
+        const latestMetrics: Record<string, number> = {}
+        metrics.forEach(metric => {
+          if (!latestMetrics[metric.metric_type]) {
+            latestMetrics[metric.metric_type] = metric.value
+          }
+        })
+
+        setDashboardData(prev => ({
+          ...prev,
+          heartRate: latestMetrics.heart_rate || prev.heartRate,
+          bloodOxygen: latestMetrics.blood_oxygen || prev.bloodOxygen,
+          sleepHours: latestMetrics.sleep_hours || prev.sleepHours,
+        }))
+      }
+
+      // Fetch latest daily activity
+      const { data: activity } = await supabase
+        .from('daily_activities')
+        .select('steps')
+        .eq('user_id', user.id)
+        .order('date', { ascending: false })
+        .limit(1)
+        .single()
+
+      if (activity) {
+        setDashboardData(prev => ({
+          ...prev,
+          steps: activity.steps || prev.steps
+        }))
+      }
+    } catch (error) {
+      console.error('Error fetching metrics:', error)
+    }
+  }
+
+  useEffect(() => {
+    if (user) {
+      fetchLatestMetrics()
+    }
+  }, [user])
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -15,91 +107,86 @@ const Index = () => {
               <span className="text-sm text-muted-foreground">AI Health Companion</span>
             </div>
             <div className="flex items-center space-x-4">
-              <div className="w-8 h-8 bg-muted rounded-full"></div>
+              <span className="text-sm text-muted-foreground">
+                Welcome, {user.user_metadata?.first_name || user.email}!
+              </span>
+              <Button variant="outline" onClick={signOut}>
+                Sign Out
+              </Button>
             </div>
           </div>
         </div>
       </header>
 
-      {/* Main Dashboard */}
+      {/* Main Content */}
       <main className="container mx-auto px-4 py-6">
-        {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-card border rounded-lg p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Heart Rate</p>
-                <p className="text-2xl font-bold">72 BPM</p>
-                <p className="text-xs text-green-600">Normal</p>
-              </div>
-              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-                ❤️
-              </div>
-            </div>
-          </div>
+        <Tabs defaultValue="dashboard" className="w-full">
+          <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+            <TabsTrigger value="journal">Journal</TabsTrigger>
+            <TabsTrigger value="metrics">Add Data</TabsTrigger>
+            <TabsTrigger value="achievements">Achievements</TabsTrigger>
+            <TabsTrigger value="recommendations">AI Coach</TabsTrigger>
+          </TabsList>
 
-          <div className="bg-card border rounded-lg p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Blood Oxygen</p>
-                <p className="text-2xl font-bold">98%</p>
-                <p className="text-xs text-green-600">Excellent</p>
-              </div>
-              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                🫁
-              </div>
+          <TabsContent value="dashboard" className="space-y-6">
+            {/* Quick Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <HealthMetricsCard
+                title="Heart Rate"
+                value={dashboardData.heartRate}
+                unit="BPM"
+                status="normal"
+                icon="❤️"
+                backgroundColor="bg-red-100"
+                trend="stable"
+              />
+              <HealthMetricsCard
+                title="Blood Oxygen"
+                value={dashboardData.bloodOxygen}
+                unit="%"
+                status="excellent"
+                icon="🫁"
+                backgroundColor="bg-blue-100"
+              />
+              <HealthMetricsCard
+                title="Daily Steps"
+                value={dashboardData.steps.toLocaleString()}
+                status="normal"
+                icon="👟"
+                backgroundColor="bg-green-100"
+                trend="up"
+              />
+              <HealthMetricsCard
+                title="Sleep"
+                value={dashboardData.sleepHours}
+                unit="hours"
+                status="normal"
+                icon="😴"
+                backgroundColor="bg-purple-100"
+              />
             </div>
-          </div>
 
-          <div className="bg-card border rounded-lg p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Activity</p>
-                <p className="text-2xl font-bold">7,842</p>
-                <p className="text-xs text-muted-foreground">steps today</p>
-              </div>
-              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                👟
-              </div>
-            </div>
-          </div>
-        </div>
+            {/* AI Recommendations */}
+            <AIRecommendations />
+          </TabsContent>
 
-        {/* Recent Activity */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-card border rounded-lg p-6">
-            <h3 className="text-lg font-semibold mb-4">Today's Summary</h3>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Sleep Quality</span>
-                <span className="text-sm font-medium">Good (7.5h)</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Stress Level</span>
-                <span className="text-sm font-medium">Low</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Hydration</span>
-                <span className="text-sm font-medium">6/8 glasses</span>
-              </div>
-            </div>
-          </div>
+          <TabsContent value="journal">
+            <HealthJournal />
+          </TabsContent>
 
-          <div className="bg-card border rounded-lg p-6">
-            <h3 className="text-lg font-semibold mb-4">AI Recommendations</h3>
-            <div className="space-y-3">
-              <div className="p-3 bg-muted rounded-lg">
-                <p className="text-sm">💡 Consider a 10-minute walk to reach your daily goal</p>
-              </div>
-              <div className="p-3 bg-muted rounded-lg">
-                <p className="text-sm">🥤 Remember to drink more water today</p>
-              </div>
-              <div className="p-3 bg-muted rounded-lg">
-                <p className="text-sm">😴 Your sleep pattern is consistent - keep it up!</p>
-              </div>
-            </div>
-          </div>
-        </div>
+          <TabsContent value="metrics">
+            <AddHealthMetric onMetricAdded={fetchLatestMetrics} />
+          </TabsContent>
+
+          <TabsContent value="achievements">
+            <GameificationPanel />
+          </TabsContent>
+
+          <TabsContent value="recommendations">
+            <AIRecommendations />
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );
