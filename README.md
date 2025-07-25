@@ -1,6 +1,7 @@
 # Uwezo – AI-Powered Health Monitoring System
 
 **Uwezo** is a next-generation health-tech platform designed to empower users and healthcare institutions with real-time health monitoring powered by artificial intelligence. Built with a modern front-end stack and Supabase for backend services, Uwezo aims to make accessible, predictive, and secure healthcare a reality—especially in underserved communities.
+Website: https://wellness-aura.lovable.app/
 
 ## 🌟 Features
 
