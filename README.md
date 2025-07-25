@@ -59,6 +59,11 @@ Open a Pull Request
 📄 Licensed
 ###linl
 
+
+---
+
+
+##
 Email: uwezo.healthtech@gmail.com
 
 Website: https://wellness-aura.lovable.app/
