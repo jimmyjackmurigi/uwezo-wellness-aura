@@ -26,34 +26,9 @@ const Index = () => {
     sleepHours: 7.5
   })
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center animate-fade-in">
-          <div className="w-20 h-20 health-gradient rounded-3xl flex items-center justify-center mx-auto mb-6 animate-pulse-glow shadow-xl">
-            <span className="text-3xl font-bold text-white">U</span>
-          </div>
-          <div className="space-y-2">
-            <h2 className="text-xl font-semibold text-foreground">Loading Uwezo</h2>
-            <p className="text-muted-foreground">Preparing your health dashboard...</p>
-          </div>
-          <div className="mt-6 flex justify-center">
-            <div className="flex space-x-1">
-              <div className="w-2 h-2 bg-primary rounded-full animate-bounce"></div>
-              <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-              <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  if (!user) {
-    return <Navigate to="/auth" replace />
-  }
-
   const fetchLatestMetrics = async () => {
+    if (!user) return
+    
     try {
       const { data: metrics } = await supabase
         .from('health_metrics')
@@ -102,6 +77,33 @@ const Index = () => {
       fetchLatestMetrics()
     }
   }, [user])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center animate-fade-in">
+          <div className="w-20 h-20 health-gradient rounded-3xl flex items-center justify-center mx-auto mb-6 animate-pulse-glow shadow-xl">
+            <span className="text-3xl font-bold text-white">U</span>
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-xl font-semibold text-foreground">Loading Uwezo</h2>
+            <p className="text-muted-foreground">Preparing your health dashboard...</p>
+          </div>
+          <div className="mt-6 flex justify-center">
+            <div className="flex space-x-1">
+              <div className="w-2 h-2 bg-primary rounded-full animate-bounce"></div>
+              <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+              <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (!user) {
+    return <Navigate to="/auth" replace />
+  }
 
   return (
     <div className="min-h-screen">
