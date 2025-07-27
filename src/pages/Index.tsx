@@ -1,14 +1,18 @@
 import { useState, useEffect } from 'react'
-import { Navigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { supabase } from '@/integrations/supabase/client'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import HealthMetricsCard from '@/components/HealthMetricsCard'
 import HealthJournal from '@/components/HealthJournal'
 import AddHealthMetric from '@/components/AddHealthMetric'
 import GameificationPanel from '@/components/GameificationPanel'
 import AIRecommendations from '@/components/AIRecommendations'
+import HealthChart from '@/components/HealthChart'
+import HealthInsights from '@/components/HealthInsights'
+import GuestWelcome from '@/components/GuestWelcome'
+import PremiumModal from '@/components/PremiumModal'
 
 interface DashboardData {
   heartRate: number
@@ -19,6 +23,8 @@ interface DashboardData {
 
 const Index = () => {
   const { user, signOut, loading } = useAuth()
+  const [showGuestWelcome, setShowGuestWelcome] = useState(!user)
+  const [isPremium, setIsPremium] = useState(false)
   const [dashboardData, setDashboardData] = useState<DashboardData>({
     heartRate: 72,
     bloodOxygen: 98,
@@ -75,8 +81,15 @@ const Index = () => {
   useEffect(() => {
     if (user) {
       fetchLatestMetrics()
+      setShowGuestWelcome(false)
     }
   }, [user])
+
+  useEffect(() => {
+    if (!user && !loading) {
+      setShowGuestWelcome(true)
+    }
+  }, [user, loading])
 
   if (loading) {
     return (
@@ -101,8 +114,8 @@ const Index = () => {
     )
   }
 
-  if (!user) {
-    return <Navigate to="/auth" replace />
+  if (showGuestWelcome) {
+    return <GuestWelcome onGetStarted={() => setShowGuestWelcome(false)} />
   }
 
   return (
